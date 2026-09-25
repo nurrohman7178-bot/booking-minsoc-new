@@ -21,6 +21,9 @@ return new class extends Migration
 
             $table->string('nama_tim');
 
+            // Total harga sesuai durasi booking
+            $table->decimal('total_harga', 12, 2);
+
             $table->enum('status', [
                 'menunggu',
                 'dikonfirmasi',

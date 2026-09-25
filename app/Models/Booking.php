@@ -15,6 +15,7 @@ class Booking extends Model
         'id_pelanggan',
         'id_jadwal',
         'nama_tim',
+        'total_harga',
         'status',
     ];
 

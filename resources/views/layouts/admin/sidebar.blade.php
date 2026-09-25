@@ -55,7 +55,7 @@
 
     {{-- Booking --}}
     <li class="nav-item {{ request()->routeIs('booking.*') ? 'active' : '' }}">
-        <a class="nav-link" href="">
+        <a class="nav-link" href="{{ route('booking.index') }}">
             <i class="fas fa-fw fa-calendar-check"></i>
             <span>Booking</span>
         </a>

@@ -10,10 +10,15 @@ return new class extends Migration
     {
         Schema::create('jadwal', function (Blueprint $table) {
             $table->id();
+
             $table->date('tanggal');
+
             $table->time('jam_mulai');
+
             $table->time('jam_selesai');
-            $table->decimal('harga', 12, 2)->default(0);
+
+            // Harga sewa per jam
+            $table->decimal('harga_per_jam', 12, 2)->default(120000);
 
             $table->enum('status', [
                 'tersedia',

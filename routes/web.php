@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\BookingController;
 
 // Login
 Route::get('/login', [AuthController::class, 'showLogin'])
@@ -27,5 +28,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 ->name('dashboard');
 //Customer
 Route::resource('customer', CustomerController::class);
-
+//Booking
+ Route::resource('booking', BookingController::class)
+        ->only(['index', 'update']);
 });

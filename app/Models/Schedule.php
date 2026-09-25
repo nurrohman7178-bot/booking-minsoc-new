@@ -15,7 +15,7 @@ class Schedule extends Model
         'tanggal',
         'jam_mulai',
         'jam_selesai',
-        'harga',
+        'harga_per_jam',
         'status',
     ];
 

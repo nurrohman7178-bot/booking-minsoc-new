@@ -11,7 +11,9 @@ return new class extends Migration
         Schema::create('jadwal', function (Blueprint $table) {
             $table->id();
             $table->date('tanggal');
-            $table->time('jam');
+            $table->time('jam_mulai');
+            $table->time('jam_selesai');
+            $table->decimal('harga', 12, 2)->default(0);
 
             $table->enum('status', [
                 'tersedia',
@@ -21,7 +23,11 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->unique(['tanggal', 'jam']);
+            $table->unique([
+                'tanggal',
+                'jam_mulai',
+                'jam_selesai'
+            ]);
         });
     }
 

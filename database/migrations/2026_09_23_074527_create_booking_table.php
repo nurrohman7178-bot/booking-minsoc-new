@@ -23,7 +23,8 @@ return new class extends Migration
 
             $table->enum('status', [
                 'menunggu',
-                'disetujui',
+                'dikonfirmasi',
+                'ditolak',
                 'selesai',
                 'dibatalkan'
             ])->default('menunggu');

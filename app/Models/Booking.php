@@ -18,12 +18,12 @@ class Booking extends Model
         'status',
     ];
 
-    public function customer()
+    public function pelanggan()
     {
         return $this->belongsTo(Customer::class, 'id_pelanggan');
     }
 
-    public function schedule()
+    public function jadwal()
     {
         return $this->belongsTo(Schedule::class, 'id_jadwal');
     }

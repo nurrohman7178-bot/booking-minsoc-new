@@ -13,7 +13,9 @@ class Schedule extends Model
 
     protected $fillable = [
         'tanggal',
-        'jam',
+        'jam_mulai',
+        'jam_selesai',
+        'harga',
         'status',
     ];
 

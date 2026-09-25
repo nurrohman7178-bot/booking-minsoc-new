@@ -47,7 +47,7 @@
 
     {{-- Customer --}}
     <li class="nav-item {{ request()->routeIs('customer.*') ? 'active' : '' }}">
-        <a class="nav-link" href="">
+        <a class="nav-link" href="{{ route('customer.index') }}">
             <i class="fas fa-fw fa-users"></i>
             <span>Customers</span>
         </a>

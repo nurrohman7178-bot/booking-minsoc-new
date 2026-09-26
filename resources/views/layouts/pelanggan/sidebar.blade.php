@@ -47,7 +47,7 @@
 
     {{-- Schedule --}}
     <li class="nav-item {{ request()->routeIs('schedule.*') ? 'active' : '' }}">
-        <a class="nav-link" href="{{ route('schedule.index') }}">
+        <a class="nav-link" href="{{ route('pelanggan.schedule') }}">
             <i class="fas fa-fw fa-users"></i>
             <span>Field Schedule</span>
         </a>
@@ -63,7 +63,7 @@
 
     {{-- History --}}
     <li class="nav-item {{ request()->routeIs('history.*') ? 'active' : '' }}">
-        <a class="nav-link" href="{{ route('history.index') }}">
+        <a class="nav-link" href="#">
             <i class="fas fa-fw fa-calendar-alt"></i>
             <span>History</span>
         </a>
@@ -71,7 +71,7 @@
 
     {{-- Setting --}}
     <li class="nav-item {{ request()->routeIs('setting.*') ? 'active' : '' }}">
-        <a class="nav-link" href="{{ route('setting.index') }}">
+        <a class="nav-link" href="#">
             <i class="fas fa-fw fa-cog"></i>
             <span>Setting</span>
         </a>

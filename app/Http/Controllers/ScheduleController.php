@@ -2,63 +2,108 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Schedule;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $mulaiMinggu = Carbon::now()->startOfWeek();
+        $akhirMinggu = Carbon::now()->endOfWeek();
+
+        $days = [];
+
+        for ($i = 0; $i < 7; $i++) {
+            $days[] = $mulaiMinggu->copy()->addDays($i);
+        }
+
+        $jamSlots = [];
+
+        for ($i = 0; $i < 24; $i++) {
+            $jamSlots[] = sprintf('%02d:00', $i);
+        }
+
+        $schedule = Schedule::with('bookings')
+            ->whereBetween('tanggal', [
+                $mulaiMinggu->toDateString(),
+                $akhirMinggu->toDateString()
+            ])
+            ->orderBy('tanggal')
+            ->orderBy('jam_mulai')
+            ->get();
+
+        return view('admin.schedule.index', compact(
+            'days',
+            'jamSlots',
+            'schedule'
+        ));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        return view('admin.schedule.create', [
+            'tanggal' => $request->tanggal,
+            'jam_mulai' => $request->jam_mulai,
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'tanggal' => 'required|date',
+            'jam_mulai' => 'required',
+            'jam_selesai' => 'required',
+            'harga_per_jam' => 'required|numeric|min:0',
+            'status' => 'required|in:tersedia,maintenance',
+        ]);
+
+        $cek = Schedule::where('tanggal', $data['tanggal'])
+            ->where('jam_mulai', $data['jam_mulai'])
+            ->exists();
+
+        if ($cek) {
+            return back()
+                ->withInput()
+                ->with('error', 'Jadwal pada jam tersebut sudah ada.');
+        }
+
+        Schedule::create($data);
+
+        return redirect()
+            ->route('schedule.index')
+            ->with('success', 'Jadwal berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Schedule $schedule)
     {
-        //
+        return view('admin.schedule.edit', compact('schedule'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Schedule $schedule)
     {
-        //
+        $data = $request->validate([
+            'tanggal' => 'required|date',
+            'jam_mulai' => 'required',
+            'jam_selesai' => 'required',
+            'harga_per_jam' => 'required|numeric|min:0',
+            'status' => 'required|in:tersedia,maintenance,booked',
+        ]);
+
+        $schedule->update($data);
+
+        return redirect()
+            ->route('schedule.index')
+            ->with('success', 'Jadwal berhasil diperbarui.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Schedule $schedule)
     {
-        //
-    }
+        $schedule->delete();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()
+            ->route('schedule.index')
+            ->with('success', 'Jadwal berhasil dihapus.');
     }
 }

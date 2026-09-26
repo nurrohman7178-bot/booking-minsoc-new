@@ -2,12 +2,32 @@
 
 <style>
     /* SIDEBAR */
+    /* SIDEBAR */
     .sidebar {
         position: sticky !important;
         top: 0;
         height: 100vh;
         align-self: flex-start;
         overflow-y: auto;
+    }
+
+    /* JARAK ANTAR MENU */
+    .sidebar .nav-item {
+        margin-bottom: 25px;
+    }
+
+    /* UKURAN TEXT MENU */
+    .sidebar .nav-link {
+        font-size: 16px !important;
+    }
+
+    .sidebar .nav-link span {
+        font-size: 16px !important;
+    }
+
+    /* UKURAN ICON */
+    .sidebar .nav-link i {
+        font-size: 16px !important;
     }
 
     /* MENU AKTIF */
@@ -44,7 +64,6 @@
             <span>Dashboard</span>
         </a>
     </li>
-
     {{-- Customer --}}
     <li class="nav-item {{ request()->routeIs('customer.*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('customer.index') }}">
@@ -63,17 +82,9 @@
 
     {{-- Schedule --}}
     <li class="nav-item {{ request()->routeIs('schedule.*') ? 'active' : '' }}">
-        <a class="nav-link" href="">
+        <a class="nav-link" href="{{ route('schedule.index') }}">
             <i class="fas fa-fw fa-calendar-alt"></i>
             <span>Schedule</span>
-        </a>
-    </li>
-
-    {{-- Setting --}}
-    <li class="nav-item {{ request()->routeIs('setting.*') ? 'active' : '' }}">
-        <a class="nav-link" href="">
-            <i class="fas fa-fw fa-cog"></i>
-            <span>Setting</span>
         </a>
     </li>
 </ul>

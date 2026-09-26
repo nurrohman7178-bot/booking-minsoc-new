@@ -1,43 +1,51 @@
 @extends('layouts.admin.app')
 
 @section('content')
-    <div class="container-fluid">
+<div class="container-fluid">
 
-        <h1 class="page-title mb-1">Customer Detail</h1>
-        <span class="text-muted d-block mb-4">Menampilkan informasi lengkap customer.</span>
+    <div class="mb-4">
+        <h1 class="h3 mb-1 text-gray-800">Detail Customer</h1>
+        <p class="text-muted mb-0">Informasi customer yang dipilih.</p>
+    </div>
 
-        <div class="card shadow">
-            <div class="card-body">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
 
-                <div class="mb-3">
-                    <strong>Nama</strong>
-                    <p>{{ $customer->user->name }}</p>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <small class="text-muted d-block">Nama</small>
+                    <strong>{{ $customer->user?->name ?? '-' }}</strong>
                 </div>
 
-                <div class="mb-3">
-                    <strong>Email</strong>
-                    <p>{{ $customer->user->email }}</p>
+                <div class="col-md-6 mb-3">
+                    <small class="text-muted d-block">Email</small>
+                    <strong>{{ $customer->user?->email ?? '-' }}</strong>
                 </div>
 
-                <div class="mb-3">
-                    <strong>No. Telepon</strong>
-                    <p>{{ $customer->no_telepon }}</p>
+                <div class="col-md-6 mb-3">
+                    <small class="text-muted d-block">No. Telepon</small>
+                    <strong>{{ $customer->no_telepon ?: '-' }}</strong>
                 </div>
 
-                <div class="mb-3">
-                    <strong>Alamat</strong>
-                    <p>{{ $customer->alamat }}</p>
+                <div class="col-md-6 mb-3">
+                    <small class="text-muted d-block">Alamat</small>
+                    <strong>{{ $customer->alamat ?: '-' }}</strong>
                 </div>
+            </div>
 
+            <div class="mt-2">
                 <a href="{{ route('customer.index') }}" class="btn btn-secondary">
                     Kembali
                 </a>
+
                 <a href="{{ route('customer.edit', $customer->id) }}" class="btn btn-primary">
+                    <i class="fas fa-edit mr-1"></i>
                     Edit
                 </a>
-
             </div>
-        </div>
 
+        </div>
     </div>
+
+</div>
 @endsection

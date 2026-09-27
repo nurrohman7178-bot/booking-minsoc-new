@@ -1,46 +1,45 @@
 <link href="{{ asset('css/sb-admin-2.min.css') }}" rel="stylesheet">
-
 <style>
     /* SIDEBAR */
-    /* SIDEBAR */
+    #wrapper {
+        display: flex;
+    }
+    #content-wrapper {
+        width: 100%;
+    }
     .sidebar {
         position: sticky !important;
         top: 0;
         height: 100vh;
+        min-height: 100vh;
         align-self: flex-start;
+        flex-shrink: 0;
         overflow-y: auto;
     }
-
     /* JARAK ANTAR MENU */
     .sidebar .nav-item {
         margin-bottom: 25px;
     }
-
     /* UKURAN TEXT MENU */
     .sidebar .nav-link {
         font-size: 16px !important;
     }
-
     .sidebar .nav-link span {
         font-size: 16px !important;
     }
-
     /* UKURAN ICON */
     .sidebar .nav-link i {
         font-size: 16px !important;
     }
-
     /* MENU AKTIF */
     .sidebar .nav-item.active .nav-link {
         background-color: #dff7e9;
         color: #10b981;
         border-radius: 3px;
     }
-
     .sidebar .nav-item.active .nav-link i {
         color: #10b981;
     }
-
     .sidebar .nav-item.active .nav-link:hover {
         background-color: #dff7e9;
         color: #10b981;
@@ -56,7 +55,6 @@
             Minisoccer <span style="color:#10b981;">Book</span>
         </div>
     </a>
-
     {{-- Dashboard --}}
     <li class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('dashboard') }}">
@@ -71,7 +69,6 @@
             <span>Customers</span>
         </a>
     </li>
-
     {{-- Booking --}}
     <li class="nav-item {{ request()->routeIs('booking.*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('booking.index') }}">
@@ -79,7 +76,6 @@
             <span>Booking</span>
         </a>
     </li>
-
     {{-- Schedule --}}
     <li class="nav-item {{ request()->routeIs('schedule.*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('schedule.index') }}">

@@ -1,174 +1,180 @@
 <?php
-
 namespace App\Http\Controllers\Pelanggan;
-
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
 use App\Models\Booking;
+use App\Models\BookingDetail;
 use App\Models\Customer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-
 class ScheduleController extends Controller
 {
     public function index()
+{
+    // Mulai dari hari ini
+    $mulaiTanggal = Carbon::today();
+    $days = [];
+    // Tampilkan 7 hari mulai hari ini
+    for ($i = 0; $i < 7; $i++) {
+        $days[] = $mulaiTanggal->copy()->addDays($i);
+    }
+    // Ambil jadwal 7 hari ke depan
+    $schedule = Schedule::whereBetween('tanggal', [
+        $mulaiTanggal->format('Y-m-d'),
+        $mulaiTanggal->copy()->addDays(6)->format('Y-m-d')
+    ])
+        ->where('status', 'tersedia')
+        ->orderBy('tanggal')
+        ->orderBy('jam_mulai')
+        ->get();
+    return view(
+        'pelanggan.schedule.index',
+        compact('days', 'schedule')
+    );
+}
+    public function store(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Ambil jadwal mulai hari ini
-        |--------------------------------------------------------------------------
-        */
-
-        $schedule = Schedule::where('tanggal', '>=', Carbon::today())
+        $pelanggan = Customer::where(
+            'id_user',
+            auth()->id()
+        )->first();
+        if (!$pelanggan) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Data pelanggan tidak ditemukan.'
+                );
+        }
+        $data = $request->validate([
+            'tanggal' => 'required|date',
+            'jam_mulai' => 'required',
+            'durasi' => 'required|integer|in:1,2,3',
+            'nama_tim' => 'required|string|max:255',
+        ]);
+        $jamMulai = Carbon::parse($data['jam_mulai']);
+        $jadwalList = [];
+        // Cari semua jam yang dibooking
+        for ($i = 0; $i < $data['durasi']; $i++) {
+            $jam = $jamMulai->copy()->addHours($i);
+            $jadwal = Schedule::where(
+                'tanggal',
+                $data['tanggal']
+            )
+                ->where(
+                    'jam_mulai',
+                    $jam->format('H:i:s')
+                )
+                ->where(
+                    'status',
+                    'tersedia'
+                )
+                ->first();
+            if (!$jadwal) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Jadwal jam ' .
+                        $jam->format('H:i') .
+                        ' tidak tersedia.'
+                    );
+            }
+            $jadwalList[] = $jadwal;
+        }
+        // Hitung total harga
+        $totalHarga = 0;
+        foreach ($jadwalList as $jadwal) {
+            $totalHarga += $jadwal->harga_per_jam;
+        }
+        // Buat booking
+        $booking = Booking::create([
+            'id_pelanggan' => $pelanggan->id,
+            'id_jadwal' => $jadwalList[0]->id,
+            'nama_tim' => $data['nama_tim'],
+            'total_harga' => $totalHarga,
+            'status' => 'menunggu',
+        ]);
+        // Simpan detail setiap jam
+        foreach ($jadwalList as $jadwal) {
+            BookingDetail::create([
+                'id_booking' => $booking->id,
+                'id_jadwal' => $jadwal->id,
+            ]);
+            // Tandai jadwal sudah dibooking
+            $jadwal->update([
+                'status' => 'booked'
+            ]);
+        }
+        return redirect()
+            ->route('pelanggan.booking')
+            ->with(
+                'success',
+                'Booking berhasil dibuat.'
+            );
+    }
+    public function booking()
+    {
+        $pelanggan = Customer::where(
+            'id_user',
+            auth()->id()
+        )->first();
+        if (!$pelanggan) {
+            return back()->with(
+                'error',
+                'Data pelanggan tidak ditemukan.'
+            );
+        }
+        // Booking milik customer yang sedang login
+        $booking = Booking::with([
+            'jadwal',
+            'details.jadwal'
+        ])
+            ->where(
+                'id_pelanggan',
+                $pelanggan->id
+            )
+            ->latest()
+            ->get();
+        // Jadwal yang masih tersedia
+        $schedule = Schedule::where(
+            'tanggal',
+            '>=',
+            Carbon::today()
+        )
+            ->where(
+                'status',
+                'tersedia'
+            )
             ->orderBy('tanggal')
             ->orderBy('jam_mulai')
             ->get();
-
-        return view('pelanggan.schedule.index', compact('schedule'));
-    }
-
-
-    public function store(Request $request)
-    {
-        /*
-        |--------------------------------------------------------------------------
-        | Validasi
-        |--------------------------------------------------------------------------
-        */
-
-        $request->validate([
-            'id_jadwal' => 'required|exists:jadwal,id',
-            'nama_tim' => 'required|string|max:255',
-        ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Ambil data pelanggan yang sedang login
-        |--------------------------------------------------------------------------
-        */
-
-        $pelanggan = Customer::where('id_user', auth()->id())->first();
-
-        if (!$pelanggan) {
-
-            return back()
-                ->with('error', 'Data pelanggan tidak ditemukan.');
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Ambil jadwal
-        |--------------------------------------------------------------------------
-        */
-
-        $jadwal = Schedule::findOrFail($request->id_jadwal);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Cek status jadwal
-        |--------------------------------------------------------------------------
-        */
-
-        if ($jadwal->status !== 'tersedia') {
-
-            return back()
-                ->with('error', 'Jadwal sudah tidak tersedia.');
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Cek waktu jadwal
-        |--------------------------------------------------------------------------
-        */
-
-        $waktuSelesai = Carbon::parse(
-            $jadwal->tanggal->format('Y-m-d')
-            . ' '
-            . $jadwal->jam_selesai
+        return view(
+            'pelanggan.booking.index',
+            compact(
+                'booking',
+                'schedule'
+            )
         );
-
-
-        if ($waktuSelesai->lessThanOrEqualTo(Carbon::now())) {
-
-            return back()
-                ->with('error', 'Jadwal tersebut sudah lewat.');
+    }
+    public function history()
+    {
+        $pelanggan = Customer::where('id_user', auth()->id())->first();
+        if (!$pelanggan) {
+            return back()->with('error', 'Data pelanggan tidak ditemukan.');
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Hitung durasi
-        |--------------------------------------------------------------------------
-        */
-
-        $mulai = Carbon::parse($jadwal->jam_mulai);
-
-        $selesai = Carbon::parse($jadwal->jam_selesai);
-
-        if ($selesai->lessThanOrEqualTo($mulai)) {
-
-            $selesai->addDay();
-        }
-
-
-        $durasiJam = $mulai->diffInHours($selesai);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Hitung total harga
-        |--------------------------------------------------------------------------
-        */
-
-        $totalHarga = $durasiJam * $jadwal->harga_per_jam;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Buat booking
-        |--------------------------------------------------------------------------
-        */
-
-        Booking::create([
-
-            'id_pelanggan' => $pelanggan->id,
-
-            'id_jadwal' => $jadwal->id,
-
-            'nama_tim' => $request->nama_tim,
-
-            'total_harga' => $totalHarga,
-
-            'status' => 'menunggu',
-
-        ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Ubah status jadwal
-        |--------------------------------------------------------------------------
-        */
-
-        $jadwal->update([
-
-            'status' => 'booked'
-
-        ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Kembali ke halaman jadwal
-        |--------------------------------------------------------------------------
-        */
-
-        return redirect()
-            ->route('pelanggan.schedule')
-            ->with('success', 'Booking berhasil dibuat.');
+        $booking = Booking::with([
+            'jadwal',
+            'details.jadwal'
+        ])
+            ->where('id_pelanggan', $pelanggan->id)
+            ->whereIn('status', [
+                'selesai',
+                'ditolak',
+                'dibatalkan'
+            ])
+            ->latest()
+            ->get();
+        return view('pelanggan.history.index', compact('booking'));
     }
 }

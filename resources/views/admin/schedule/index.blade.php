@@ -10,212 +10,158 @@
                 Schedule Data
             </h1>
 
-            <p class="text-muted">
-                Kelola jadwal lapangan.
+            <p class="text-muted mb-3">
+                Kelola hari operasional lapangan minggu ini.
             </p>
 
-            <div class="d-flex align-items-center">
+            <form action="{{ route('schedule.generate') }}" method="POST">
+                @csrf
 
-                {{-- Generate --}}
-                <form action="{{ route('schedule.generate') }}" method="POST" class="mr-2">
-                    @csrf
+                <button type="submit" class="btn btn-success" onclick="return confirm('Buat jadwal untuk minggu ini?')">
 
-                    <button type="submit" class="btn btn-success" onclick="return confirm('Buat jadwal minggu ini?')">
+                    <i class="fas fa-calendar-plus mr-1"></i>
+                    Generate Jadwal Mingguan
 
-                        <i class="fas fa-calendar-plus mr-1"></i>
-                        Generate Jadwal
-                    </button>
-                </form>
+                </button>
 
-            </div>
+            </form>
 
         </div>
 
 
-        {{-- Pesan --}}
-        @if(session('success'))
+        {{-- SUCCESS --}}
+        @if (session('success'))
+
             <div class="alert alert-success">
                 {{ session('success') }}
             </div>
+
         @endif
 
-        @if(session('error'))
+
+        {{-- ERROR --}}
+        @if (session('error'))
+
             <div class="alert alert-danger">
                 {{ session('error') }}
             </div>
+
         @endif
 
 
-        {{-- Jadwal --}}
-        <div class="card shadow-sm">
+        {{-- DAFTAR HARI --}}
+        <div class="row">
 
-            <div class="card-body p-0">
+            @foreach ($days as $day)
+                @php
+                    $tanggal = $day->format('Y-m-d');
 
-                <div class="table-responsive">
+                    $jadwalHariIni = $schedule->filter(function ($item) use ($tanggal) {
+                        return $item->tanggal->format('Y-m-d') == $tanggal;
+                    });
 
-                    <table class="table table-bordered text-center mb-0">
+                    $hariLibur = $jadwalHariIni->contains(function ($item) {
+                        return $item->status == 'libur';
+                    });
+                @endphp
 
-                        <thead>
 
-                            <tr>
+                <div class="col-md-6 col-lg-4 mb-4">
 
-                                <th width="80">
-                                    Jam
-                                </th>
+                    <div class="card shadow-sm border-0 h-100">
 
-                                @foreach($days as $day)
+                        <div class="card-body">
 
-                                    @php
-                                        $tanggal = $day->format('Y-m-d');
+                            <div class="d-flex justify-content-between align-items-start">
 
-                                        $hariLibur = $schedule
-                                            ->where('tanggal', $tanggal)
-                                            ->where('status', 'libur')
-                                            ->count() > 0;
-                                    @endphp
+                                <div>
 
-                                    <th>
+                                    <h5 class="font-weight-bold mb-1">
+                                        {{ $day->translatedFormat('l') }}
+                                    </h5>
 
-                                        {{ $day->translatedFormat('D') }}
+                                    <small class="text-muted">
+                                        {{ $day->format('d-m-Y') }}
+                                    </small>
 
-                                        <br>
+                                </div>
 
-                                        <small class="text-muted">
-                                            {{ $day->format('d/m') }}
-                                        </small>
 
-                                        <br>
+                                {{-- STATUS HARI --}}
+                                @if ($hariLibur)
 
-                                        @if($hariLibur)
+                                    <span class="badge badge-secondary">
+                                        Libur
+                                    </span>
 
-                                            <form action="{{ route('schedule.buka') }}" method="POST" class="mt-2">
+                                @else
 
-                                                @csrf
+                                    <span class="badge badge-success">
+                                        Operasional
+                                    </span>
 
-                                                <input type="hidden" name="tanggal" value="{{ $tanggal }}">
+                                @endif
 
-                                                <button type="submit" class="btn btn-sm btn-success">
+                            </div>
 
-                                                    Buka Kembali
 
-                                                </button>
+                            <hr>
 
-                                            </form>
 
-                                        @else
+                            {{-- JIKA LIBUR --}}
+                            @if ($hariLibur)
 
-                                            <form action="{{ route('schedule.libur') }}" method="POST" class="mt-2">
+                                <p class="text-muted mb-3">
+                                    Lapangan tidak dapat digunakan pada tanggal ini.
+                                </p>
 
-                                                @csrf
+                                <form action="{{ route('schedule.buka') }}" method="POST">
 
-                                                <input type="hidden" name="tanggal" value="{{ $tanggal }}">
+                                    @csrf
 
-                                                <button type="submit" class="btn btn-sm btn-warning"
-                                                    onclick="return confirm('Liburkan tanggal ini?')">
+                                    <input type="hidden" name="tanggal" value="{{ $tanggal }}">
 
-                                                    Liburkan
+                                    <button type="submit" class="btn btn-success btn-sm">
 
-                                                </button>
+                                        <i class="fas fa-check mr-1"></i>
+                                        Buka Kembali
 
-                                            </form>
+                                    </button>
 
-                                        @endif
+                                </form>
 
-                                    </th>
 
-                                @endforeach
+                                {{-- JIKA OPERASIONAL --}}
+                            @else
 
-                            </tr>
+                                <p class="text-muted mb-3">
+                                    Lapangan dapat dibooking oleh customer.
+                                </p>
 
-                        </thead>
+                                <form action="{{ route('schedule.libur') }}" method="POST">
 
+                                    @csrf
 
-                        <tbody>
+                                    <input type="hidden" name="tanggal" value="{{ $tanggal }}">
 
-                            @foreach($jamSlots as $jam)
+                                    <button type="submit" class="btn btn-warning btn-sm"
+                                        onclick="return confirm('Yakin ingin meliburkan tanggal ini?')">
 
-                                <tr>
+                                        <i class="fas fa-calendar-times mr-1"></i>
+                                        Liburkan
 
-                                    <td class="font-weight-bold">
-                                        {{ $jam }}
-                                    </td>
+                                    </button>
 
+                                </form>
 
-                                    @foreach($days as $day)
+                            @endif
 
-                                        @php
+                        </div>
 
-                                            $tanggal = $day->format('Y-m-d');
-
-                                            $data = $schedule->first(function ($item) use ($tanggal, $jam) {
-
-                                                return $item->tanggal->format('Y-m-d') == $tanggal
-                                                    && Carbon\Carbon::parse($item->jam_mulai)->format('H:i') == $jam;
-
-                                            });
-
-                                        @endphp
-
-
-                                        @if(!$data)
-
-                                            <td class="schedule-cell">
-                                                -
-                                            </td>
-
-
-                                        @elseif($data->status == 'libur')
-
-                                            <td class="schedule-cell libur">
-                                                Libur
-                                            </td>
-
-
-                                        @elseif($data->status == 'tersedia')
-
-                                            <td class="schedule-cell tersedia">
-                                                Tersedia
-                                            </td>
-
-
-                                        @elseif($data->status == 'booked')
-
-                                            @php
-                                                $booking = $data->bookings->first();
-                                            @endphp
-
-                                            <td class="schedule-cell booked">
-
-                                                @if($booking)
-                                                    {{ $booking->nama_tim }}
-                                                @else
-                                                    Booked
-                                                @endif
-
-                                            </td>
-
-
-                                        @elseif($data->status == 'maintenance')
-
-                                            <td class="schedule-cell maintenance">
-                                                Maintenance
-                                            </td>
-
-                                        @endif
-
-                                    @endforeach
-
-                                </tr>
-
-                            @endforeach
-
-                        </tbody>
-
-                    </table>
+                    </div>
 
                 </div>
-
-            </div>
+            @endforeach
 
         </div>
 
@@ -223,35 +169,13 @@
 
 
     <style>
-        .schedule-cell {
-            height: 45px;
-            min-width: 110px;
-            vertical-align: middle !important;
+        .card {
+            border-radius: 8px;
+        }
+
+        .badge {
             font-size: 12px;
-        }
-
-        .tersedia {
-            background: #f0fff7;
-            color: #10b981;
-            font-weight: bold;
-        }
-
-        .booked {
-            background: #e4f7ed;
-            color: #10b981;
-            font-weight: bold;
-        }
-
-        .maintenance {
-            background: #fff0d9;
-            color: #d9822b;
-            font-weight: bold;
-        }
-
-        .libur {
-            background: #eeeeee;
-            color: #777;
-            font-weight: bold;
+            padding: 7px 10px;
         }
     </style>
 

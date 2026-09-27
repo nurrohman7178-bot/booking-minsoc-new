@@ -1,81 +1,230 @@
 @extends('layouts.pelanggan.app')
-
 @section('content')
     <div class="container-fluid">
-
+        {{-- JUDUL --}}
         <div class="mb-4">
-            <h1 class="page-title mb-1">Booking Lapangan</h1>
-            <p class="text-muted mb-0">Pilih tanggal dan jam yang masih tersedia untuk melakukan booking.</p>
+            <h1 class="page-title mb-1">
+                Booking Lapangan
+            </h1>
+            <p class="text-muted mb-3">
+                Pilih tanggal, jam, dan durasi booking.
+            </p>
         </div>
-
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle mr-1"></i> {{ session('success') }}
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-            </div>
-        @endif
-
+        {{-- PESAN ERROR --}}
         @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle mr-1"></i> {{ session('error') }}
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <div class="alert alert-danger">
+                {{ session('error') }}
             </div>
         @endif
-
-        <div class="card shadow-sm border-0">
-            <div class="card-header py-3 bg-white">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="fas fa-calendar-check mr-1"></i> Pilih Jadwal
-                </h6>
+        {{-- VALIDATION ERROR --}}
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
-
+        @endif
+        <div class="card shadow-sm">
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered mb-0">
-                        <thead>
-                            <tr>
-                                <th width="60px">NO</th>
-                                <th>Tanggal</th>
-                                <th>Hari</th>
-                                <th>Jam</th>
-                                <th>Harga</th>
-                                <th width="150px">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($schedule as $jadwal)
-                                <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($jadwal->tanggal)->format('d-m-Y') }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($jadwal->tanggal)->locale('id')->translatedFormat('l') }}</td>
-                                    <td>
-                                        {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} -
-                                        {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }}
-                                    </td>
-                                    <td>Rp {{ number_format($jadwal->harga, 0, ',', '.') }}</td>
-                                    <td>
-                                        <form action="{{ route('booking.store') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="id_jadwal" value="{{ $jadwal->id_jadwal }}">
-                                            <button type="submit" class="btn btn-sm btn-success btn-block">
-                                                <i class="fas fa-calendar-plus mr-1"></i> Booking
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-5">
-                                        <i class="fas fa-calendar-times fa-2x mb-2"></i>
-                                        <div>Belum ada jadwal yang tersedia.</div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                <form action="{{ route('pelanggan.schedule.store') }}" method="POST">
+                    @csrf
+                    {{-- NAMA CUSTOMER --}}
+                    <div class="form-group">
+                        <label>
+                            Nama Customer
+                        </label>
+                        <input type="text" class="form-control" value="{{ auth()->user()->name }}" readonly>
+                    </div>
+                    {{-- EMAIL --}}
+                    <div class="form-group">
+                        <label>
+                            Email
+                        </label>
+                        <input type="text" class="form-control" value="{{ auth()->user()->email }}" readonly>
+                    </div>
+                    {{-- TANGGAL --}}
+                    <div class="form-group">
+                        <label>
+                            Tanggal
+                        </label>
+                        <select name="tanggal" id="tanggal" class="form-control" required>
+                            <option value="">
+                                -- Pilih Tanggal --
+                            </option>
+                            @foreach (
+                                    $schedule->groupBy(function ($item) {
+                                        return $item->tanggal->format('Y-m-d');
+                                    }) as $tanggal => $jadwals
+                                )
+                                <option value="{{ $tanggal }}" {{ old('tanggal') == $tanggal ? 'selected' : '' }}>
+                                    {{ \Carbon\Carbon::parse($tanggal)->format('d-m-Y') }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    {{-- JAM MULAI --}}
+                    <div class="form-group">
+                        <label>
+                            Jam Mulai
+                        </label>
+                        <select name="jam_mulai" id="jam_mulai" class="form-control" required>
+                            <option value="">
+                                -- Pilih Jam Mulai --
+                            </option>
+                        </select>
+                    </div>
+                    {{-- DURASI --}}
+                    <div class="form-group">
+                        <label>
+                            Durasi
+                        </label>
+                        <select name="durasi" id="durasi" class="form-control" required>
+                            <option value="">
+                                -- Pilih Durasi --
+                            </option>
+                            <option value="1">
+                                1 Jam
+                            </option>
+                            <option value="2">
+                                2 Jam
+                            </option>
+                            <option value="3">
+                                3 Jam
+                            </option>
+                        </select>
+                    </div>
+                    {{-- NAMA TIM --}}
+                    <div class="form-group">
+                        <label>
+                            Nama Tim
+                        </label>
+                        <input type="text" name="nama_tim" class="form-control" placeholder="Masukkan nama tim"
+                            value="{{ old('nama_tim') }}" required>
+                    </div>
+                    {{-- TOTAL HARGA --}}
+                    <div class="form-group">
+                        <label>
+                            Total Harga
+                        </label>
+                        <input type="text" id="total_harga" class="form-control" value="Rp 0" readonly>
+                    </div>
+                    {{-- BUTTON --}}
+                    <div class="text-right">
+                        <a href="{{ route('dashboard') }}" class="btn btn-secondary">
+                            Kembali
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            Booking
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-
     </div>
+    {{-- SCRIPT --}}
+    <script>
+        const schedule = @json($schedule);
+        const tanggal =
+            document.getElementById('tanggal');
+        const jamMulai =
+            document.getElementById('jam_mulai');
+        const durasi =
+            document.getElementById('durasi');
+        const totalHarga =
+            document.getElementById('total_harga');
+        function tampilkanJam() {
+            jamMulai.innerHTML = `
+                    <option value="">
+                        -- Pilih Jam Mulai --
+                    </option>
+                `;
+            const tanggalDipilih =
+                tanggal.value;
+            if (!tanggalDipilih) {
+                hitungHarga();
+                return;
+            }
+            schedule.forEach(function (data) {
+                const tanggalData =
+                    data.tanggal.substring(0, 10);
+                if (tanggalData === tanggalDipilih) {
+                    const jam =
+                        data.jam_mulai.substring(0, 5);
+                    jamMulai.innerHTML += `
+                            <option value="${jam}:00">
+                                ${jam}
+                            </option>
+                        `;
+                }
+            });
+            hitungHarga();
+        }
+        function hitungHarga() {
+            const tanggalDipilih =
+                tanggal.value;
+            const jamDipilih =
+                jamMulai.value;
+            const durasiDipilih =
+                parseInt(durasi.value);
+            if (
+                !tanggalDipilih ||
+                !jamDipilih ||
+                !durasiDipilih
+            ) {
+                totalHarga.value = 'Rp 0';
+                return;
+            }
+            const jamAwal =
+                jamDipilih.substring(0, 5);
+            let hargaPerJam = 0;
+            schedule.forEach(function (data) {
+                const tanggalData =
+                    data.tanggal.substring(0, 10);
+                const jamData =
+                    data.jam_mulai.substring(0, 5);
+                if (
+                    tanggalData === tanggalDipilih &&
+                    jamData === jamAwal
+                ) {
+                    hargaPerJam =
+                        parseFloat(data.harga_per_jam);
+                }
+            });
+            const total =
+                hargaPerJam * durasiDipilih;
+            totalHarga.value =
+                'Rp ' +
+                total.toLocaleString('id-ID');
+        }
+        tanggal.addEventListener(
+            'change',
+            function () {
+                tampilkanJam();
+            }
+        );
+        jamMulai.addEventListener(
+            'change',
+            function () {
+                hitungHarga();
+            }
+        );
+        durasi.addEventListener(
+            'change',
+            function () {
+                hitungHarga();
+            }
+        );
+        if (tanggal.value) {
+            tampilkanJam();
+            const jamLama =
+                "{{ old('jam_mulai') }}";
+            if (jamLama) {
+                jamMulai.value =
+                    jamLama;
+            }
+            hitungHarga();
+        }
+    </script>
 @endsection

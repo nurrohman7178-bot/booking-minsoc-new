@@ -32,7 +32,8 @@ var myLineChart = new Chart(ctx, {
             pointHoverBorderColor: "rgba(78, 115, 223, 1)",
             pointHitRadius: 10,
             pointBorderWidth: 2,
-            // Data booking sementara
+
+            // Data dari database Laravel
             data: [15, 3, 15, 14, 5, 6, 23]
         }]
     },

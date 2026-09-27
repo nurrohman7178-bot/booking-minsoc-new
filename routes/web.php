@@ -5,6 +5,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\ProfilController;
+
+use App\Http\Controllers\Pelanggan\ScheduleController as PelangganScheduleController;
 
 // Login
 Route::get('/login', [AuthController::class, 'showLogin'])
@@ -24,11 +28,33 @@ Route::middleware('auth')->group(function () {
 
     //ADMIN//
 //Dashboard
-Route::get('/dashboard', [DashboardController::class, 'index'])
-->name('dashboard');
-//Customer
-Route::resource('customer', CustomerController::class);
-//Booking
- Route::resource('booking', BookingController::class)
-        ->only(['index', 'update']);
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
+    //Customer
+    Route::resource('customer', CustomerController::class);
+    //Booking
+    Route::resource('booking', BookingController::class);
+    //Schedule
+    Route::post(
+        '/schedule/generate',
+        [ScheduleController::class, 'generate']
+    )->name('schedule.generate');
+    Route::post('/schedule/libur', [ScheduleController::class, 'libur'])
+        ->name('schedule.libur');
+    Route::resource('schedule', ScheduleController::class)
+        ->only(['index', 'edit', 'update', 'destroy']);
+    //Setting
+    Route::get('/profil', [ProfilController::class, 'index'])
+        ->name('profil');
+
+    //PELANGGAN//
+    Route::get(
+        '/pelanggan/schedule',
+        [PelangganScheduleController::class, 'index']
+    )->name('pelanggan.schedule');
+
+    Route::post(
+        '/pelanggan/schedule',
+        [PelangganScheduleController::class, 'store']
+    )->name('pelanggan.schedule.store');
 });

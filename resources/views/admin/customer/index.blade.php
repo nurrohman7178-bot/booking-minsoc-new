@@ -11,10 +11,13 @@
 
         {{-- Add Customer Button --}}
         <div class="d-flex justify-content-end mb-3">
-            <a href="{{ route('customer.create') }}" class="btn btn-success rounded-pill px-3 shadow-sm">
-                <i class="fas fa-plus mr-1"></i>
-                Tambah Customer
-            </a>
+            <a href="{{ route('customer.create') }}"
+           class="btn btn-success">
+
+            <i class="fas fa-plus mr-1"></i>
+            Tambah Customer
+
+        </a>
         </div>
 
         {{-- Customer Table --}}

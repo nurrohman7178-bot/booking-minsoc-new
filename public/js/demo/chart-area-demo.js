@@ -32,7 +32,7 @@ var myLineChart = new Chart(ctx, {
             pointHoverBorderColor: "rgba(78, 115, 223, 1)",
             pointHitRadius: 10,
             pointBorderWidth: 2,
-            // Data booking sementar
+            // Data booking sementara
             data: [15, 3, 15, 14, 5, 6, 23]
         }]
     },
@@ -64,11 +64,11 @@ var myLineChart = new Chart(ctx, {
             yAxes: [{
                 ticks: {
                     beginAtZero: true,
-                    maxTicksLimit: 5,
-                    padding: 10,
-                    stepSize: 5
+                    min: 0,
+                    max: 24,
+                    stepSize: 6,
+                    padding: 10
                 },
-
                 gridLines: {
                     color: "rgb(234, 236, 244)",
                     zeroLineColor: "rgb(234, 236, 244)",

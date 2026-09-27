@@ -14,7 +14,7 @@
     {{-- Topbar Navbar --}}
     <ul class="navbar-nav ml-auto">
         <li class="nav-item dropdown no-arrow">
-            <a class="nav-link" href="{{ route('notification.index') }}">
+            <a class="nav-link" href="#">
                 <i class="fas fa-bell fa-fw"></i>
                 <span class="badge badge-danger badge-counter">3</span>
             </a>

@@ -1,113 +1,96 @@
 @extends('layouts.admin.app')
 
 @section('content')
+    <div class="container-fluid">
 
-<div class="container-fluid">
+        <div class="mb-4">
 
-    {{-- Page Heading --}}
-    <div class="mb-4">
-        <h1 class="page-title mb-1">Booking Data Page</h1>
-        <p class="text-muted mb-0">
-            Data customer yang melakukan booking lapangan
-        </p>
-    </div>
+            <h1 class="page-title mb-1">
+                Booking Data
+            </h1>
 
+            <p class="text-muted mb-3">
+                Kelola data booking customer.
+            </p>
 
-    {{-- Success --}}
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle mr-1"></i>
-            {{ session('success') }}
+            <div class="text-right">
 
-            <button type="button"
-                    class="close"
-                    data-dismiss="alert">
-                &times;
-            </button>
+                <a href="{{ route('booking.create') }}" class="btn btn-success">
+
+                    <i class="fas fa-plus mr-1"></i>
+                    Tambah Booking
+
+                </a>
+
+            </div>
+
         </div>
-    @endif
 
 
-    {{-- Error --}}
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle mr-1"></i>
-            {{ session('error') }}
-
-            <button type="button"
-                    class="close"
-                    data-dismiss="alert">
-                &times;
-            </button>
-        </div>
-    @endif
+        @if (session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
 
 
-    {{-- Table --}}
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
+        <div class="card shadow-sm border-0">
 
-            <div class="table-responsive">
+            <div class="card-body">
 
-                <table class="table table-striped table-bordered mb-0">
+                <div class="table-responsive">
 
-                    <thead>
-                        <tr>
-                            <th width="60px">NO</th>
+                    <table class="table table-bordered">
 
-                            <th>Nama Customer / Nama Team</th>
-
-                            <th>Tanggal</th>
-
-                            <th>Jam</th>
-
-                            <th>Harga</th>
-
-                            <th>Status Booking</th>
-
-                            <th width="190px">Aksi</th>
-                        </tr>
-                    </thead>
-
-
-                    <tbody>
-
-                        @forelse ($booking as $data)
+                        <thead>
 
                             <tr>
 
-                                {{-- NO --}}
-                                <td>
-                                    {{ $loop->iteration }}
-                                </td>
+                                <th>No</th>
+                                <th>Customer / Team</th>
+                                <th>Tanggal</th>
+                                <th>Jam</th>
+                                <th>Harga</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @forelse ($booking as $data)
+                                <tr>
+
+                                    <td>
+                                        {{ $loop->iteration }}
+                                    </td>
 
 
-                                {{-- NAMA --}}
-                                <td>
-                                    {{ $data->pelanggan?->user?->name ?? '-' }}
+                                    <td>
 
-                                    @if ($data->nama_tim)
+                                        <strong>
+                                            {{ $data->pelanggan->user->name }}
+                                        </strong>
+
                                         <br>
+
                                         <small class="text-muted">
-                                            Tim: {{ $data->nama_tim }}
+                                            {{ $data->nama_tim }}
                                         </small>
-                                    @endif
-                                </td>
+
+                                    </td>
 
 
-                                {{-- TANGGAL --}}
-                                <td>
-                                    @if ($data->jadwal)
+                                    <td>
+
                                         {{ $data->jadwal->tanggal->format('d-m-Y') }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
+
+                                    </td>
 
 
-                                {{-- JAM --}}
-                                <td>
-                                    @if ($data->jadwal)
+                                    <td>
 
                                         {{ \Carbon\Carbon::parse($data->jadwal->jam_mulai)->format('H:i') }}
 
@@ -115,82 +98,100 @@
 
                                         {{ \Carbon\Carbon::parse($data->jadwal->jam_selesai)->format('H:i') }}
 
-                                    @else
-                                        -
-                                    @endif
-                                </td>
+                                    </td>
 
 
-                                {{-- HARGA --}}
-                                <td>
-                                    Rp
-                                    {{ number_format($data->total_harga, 0, ',', '.') }}
-                                </td>
+                                    <td>
+
+                                        Rp{{ number_format($data->total_harga, 0, ',', '.') }}
+
+                                    </td>
 
 
-                                {{-- STATUS --}}
-                                <td>
+                                    <td>
 
-                                    @if ($data->status == 'menunggu')
+                                        @if ($data->status == 'menunggu')
+                                            <span class="badge badge-warning">
+                                                Menunggu
+                                            </span>
+                                        @elseif ($data->status == 'dikonfirmasi')
+                                            <span class="badge badge-success">
+                                                Dikonfirmasi
+                                            </span>
+                                        @elseif ($data->status == 'ditolak')
+                                            <span class="badge badge-danger">
+                                                Ditolak
+                                            </span>
+                                        @elseif ($data->status == 'dibatalkan')
+                                            <span class="badge badge-secondary">
+                                                Dibatalkan
+                                            </span>
+                                        @elseif ($data->status == 'selesai')
+                                            <span class="badge badge-primary">
+                                                Selesai
+                                            </span>
+                                        @endif
 
-                                        <span class="badge badge-warning">
-                                            Menunggu
-                                        </span>
-
-                                    @elseif ($data->status == 'dikonfirmasi')
-
-                                        <span class="badge badge-success">
-                                            Dikonfirmasi
-                                        </span>
-
-                                    @elseif ($data->status == 'ditolak')
-
-                                        <span class="badge badge-danger">
-                                            Ditolak
-                                        </span>
-
-                                    @elseif ($data->status == 'selesai')
-
-                                        <span class="badge badge-primary">
-                                            Selesai
-                                        </span>
-
-                                    @else
-
-                                        <span class="badge badge-secondary">
-                                            Dibatalkan
-                                        </span>
-
-                                    @endif
-
-                                </td>
+                                    </td>
 
 
-                                {{-- AKSI --}}
-                                <td>
+                                    <td style="white-space: nowrap;">
 
-                                    @if ($data->status == 'menunggu')
+                                        {{-- SHOW --}}
+                                        <a href="{{ route('booking.show', $data->id) }}" class="btn btn-info btn-sm"
+                                            title="Lihat">
 
-                                        <div class="d-flex" style="gap: 5px;">
+                                            <i class="fas fa-eye"></i>
 
-                                            {{-- TERIMA --}}
-                                            <form action="{{ route('booking.update', $data->id) }}"
-                                                  method="POST">
+                                        </a>
+
+
+                                        {{-- EDIT --}}
+                                        <a href="{{ route('booking.edit', $data->id) }}" class="btn btn-warning btn-sm"
+                                            title="Edit">
+
+                                            <i class="fas fa-edit"></i>
+
+                                        </a>
+
+
+                                        {{-- DELETE --}}
+                                        <form action="{{ route('booking.destroy', $data->id) }}" method="POST"
+                                            style="display:inline;">
+
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Hapus booking ini?')">
+
+                                                <i class="fas fa-trash"></i>
+
+                                            </button>
+
+                                        </form>
+
+
+                                        {{-- KONFIRMASI --}}
+                                        @if ($data->status == 'menunggu')
+                                            <form action="{{ route('booking.update', $data->id) }}" method="POST"
+                                                style="display:inline;">
 
                                                 @csrf
-
                                                 @method('PUT')
 
-                                                <input type="hidden"
-                                                       name="status"
-                                                       value="dikonfirmasi">
+                                                <input type="hidden" name="id_pelanggan"
+                                                    value="{{ $data->id_pelanggan }}">
 
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-success">
+                                                <input type="hidden" name="id_jadwal" value="{{ $data->id_jadwal }}">
 
-                                                    <i class="fas fa-check mr-1"></i>
+                                                <input type="hidden" name="nama_tim" value="{{ $data->nama_tim }}">
 
-                                                    Terima
+                                                <input type="hidden" name="status" value="dikonfirmasi">
+
+                                                <button type="submit" class="btn btn-success btn-sm">
+
+                                                    Konfirmasi
 
                                                 </button>
 
@@ -198,66 +199,105 @@
 
 
                                             {{-- TOLAK --}}
-                                            <form action="{{ route('booking.update', $data->id) }}"
-                                                  method="POST">
+                                            <form action="{{ route('booking.update', $data->id) }}" method="POST"
+                                                style="display:inline;">
 
                                                 @csrf
-
                                                 @method('PUT')
 
-                                                <input type="hidden"
-                                                       name="status"
-                                                       value="ditolak">
+                                                <input type="hidden" name="id_pelanggan"
+                                                    value="{{ $data->id_pelanggan }}">
 
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-danger">
+                                                <input type="hidden" name="id_jadwal" value="{{ $data->id_jadwal }}">
 
-                                                    <i class="fas fa-times mr-1"></i>
+                                                <input type="hidden" name="nama_tim" value="{{ $data->nama_tim }}">
+
+                                                <input type="hidden" name="status" value="ditolak">
+
+                                                <button type="submit" class="btn btn-danger btn-sm">
 
                                                     Tolak
 
                                                 </button>
 
                                             </form>
+                                        @endif
 
-                                        </div>
 
-                                    @else
+                                        {{-- BATALKAN --}}
+                                        @if ($data->status == 'dikonfirmasi')
+                                            <form action="{{ route('booking.update', $data->id) }}" method="POST"
+                                                style="display:inline;">
 
-                                        <span class="text-muted">
-                                            Sudah diproses
-                                        </span>
+                                                @csrf
+                                                @method('PUT')
 
-                                    @endif
+                                                <input type="hidden" name="id_pelanggan"
+                                                    value="{{ $data->id_pelanggan }}">
 
-                                </td>
+                                                <input type="hidden" name="id_jadwal" value="{{ $data->id_jadwal }}">
 
-                            </tr>
+                                                <input type="hidden" name="nama_tim" value="{{ $data->nama_tim }}">
 
-                        @empty
+                                                <input type="hidden" name="status" value="dibatalkan">
 
-                            <tr>
+                                                <button type="submit" class="btn btn-secondary btn-sm">
 
-                                <td colspan="7"
-                                    class="text-center text-muted py-4">
+                                                    Batalkan
 
-                                    Belum ada data booking.
+                                                </button>
 
-                                </td>
+                                            </form>
+                                        @endif
+                                        {{-- SELESAI --}}
+                                        @if ($data->status == 'dikonfirmasi')
+                                            <form action="{{ route('booking.update', $data->id) }}" method="POST"
+                                                style="display:inline;">
 
-                            </tr>
+                                                @csrf
+                                                @method('PUT')
 
-                        @endforelse
+                                                <input type="hidden" name="id_pelanggan"
+                                                    value="{{ $data->id_pelanggan }}">
 
-                    </tbody>
+                                                <input type="hidden" name="id_jadwal" value="{{ $data->id_jadwal }}">
 
-                </table>
+                                                <input type="hidden" name="nama_tim" value="{{ $data->nama_tim }}">
+
+                                                <input type="hidden" name="status" value="selesai">
+
+                                                <button type="submit" class="btn btn-primary btn-sm">
+                                                    Selesai
+                                                </button>
+
+                                            </form>
+                                        @endif
+                                    </td>
+
+                                </tr>
+
+                            @empty
+
+                                <tr>
+
+                                    <td colspan="7" class="text-center">
+
+                                        Belum ada data booking.
+
+                                    </td>
+
+                                </tr>
+                            @endforelse
+
+                        </tbody>
+
+                    </table>
+
+                </div>
 
             </div>
 
         </div>
+
     </div>
-
-</div>
-
 @endsection

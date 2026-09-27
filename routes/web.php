@@ -35,14 +35,17 @@ Route::middleware('auth')->group(function () {
     //Booking
     Route::resource('booking', BookingController::class);
     //Schedule
-    Route::post(
-        '/schedule/generate',
-        [ScheduleController::class, 'generate']
-    )->name('schedule.generate');
+    Route::post('/schedule/generate', [ScheduleController::class, 'generate'])
+        ->name('schedule.generate');
     Route::post('/schedule/libur', [ScheduleController::class, 'libur'])
         ->name('schedule.libur');
+    Route::post('/schedule/buka', [ScheduleController::class, 'buka'])
+        ->name('schedule.buka');
     Route::resource('schedule', ScheduleController::class)
         ->only(['index', 'edit', 'update', 'destroy']);
+
+    // Booking Admin
+    Route::resource('booking', BookingController::class);
     //Setting
     Route::get('/profil', [ProfilController::class, 'index'])
         ->name('profil');

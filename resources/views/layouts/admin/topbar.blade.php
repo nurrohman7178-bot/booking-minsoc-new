@@ -21,11 +21,6 @@
             type="button">
         <i class="fa fa-bars"></i>
     </button>
-
-    <div class="d-none d-md-block text-gray-600 small">
-        MiniSoccer Book
-    </div>
-
     <ul class="navbar-nav ml-auto">
 
         <li class="nav-item dropdown no-arrow">
@@ -63,14 +58,12 @@
                     <div class="small text-muted">{{ Auth::user()->email }}</div>
                 </div>
 
-<<<<<<< HEAD
                 {{-- Profile --}}
                 <a class="dropdown-item" href="{{ route('profil') }}">
                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                     Profile
                 </a>
-=======
->>>>>>> 31e2af5067c9108ce512f1147ceb4f359d46fc77
+
                 <div class="dropdown-divider"></div>
 
                 <a class="dropdown-item"

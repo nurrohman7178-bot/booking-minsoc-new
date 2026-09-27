@@ -1,50 +1,30 @@
 @extends('layouts.admin.app')
 
 @section('content')
+
     <div class="container-fluid">
 
-        {{-- Heading --}}
         <div class="mb-4">
 
             <h1 class="page-title mb-1">
                 Schedule Data
             </h1>
 
-            <p class="text-muted mb-3">
+            <p class="text-muted">
                 Kelola jadwal lapangan.
             </p>
 
-            <div class="d-flex">
+            <div class="d-flex align-items-center">
 
                 {{-- Generate --}}
                 <form action="{{ route('schedule.generate') }}" method="POST" class="mr-2">
-
                     @csrf
 
-                    <button type="submit" class="btn btn-success" onclick="return confirm('Buat jadwal untuk minggu ini?')">
+                    <button type="submit" class="btn btn-success" onclick="return confirm('Buat jadwal minggu ini?')">
 
                         <i class="fas fa-calendar-plus mr-1"></i>
-                        Generate Jadwal Mingguan
-
+                        Generate Jadwal
                     </button>
-
-                </form>
-
-                {{-- Liburkan Hari --}}
-                <form action="{{ route('schedule.libur') }}" method="POST">
-
-                    @csrf
-
-                    <input type="date" name="tanggal" class="form-control d-inline-block" style="width: 160px;" required>
-
-                    <button type="submit" class="btn btn-warning"
-                        onclick="return confirm('Yakin ingin meliburkan tanggal ini?')">
-
-                        <i class="fas fa-calendar-times mr-1"></i>
-                        Liburkan Hari
-
-                    </button>
-
                 </form>
 
             </div>
@@ -52,24 +32,22 @@
         </div>
 
 
-        {{-- Success --}}
-        @if (session('success'))
+        {{-- Pesan --}}
+        @if(session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
             </div>
         @endif
 
-
-        {{-- Error --}}
-        @if (session('error'))
+        @if(session('error'))
             <div class="alert alert-danger">
                 {{ session('error') }}
             </div>
         @endif
 
 
-        {{-- Schedule --}}
-        <div class="card shadow-sm border-0">
+        {{-- Jadwal --}}
+        <div class="card shadow-sm">
 
             <div class="card-body p-0">
 
@@ -81,11 +59,21 @@
 
                             <tr>
 
-                                <th class="time-column">
+                                <th width="80">
                                     Jam
                                 </th>
 
-                                @foreach ($days as $day)
+                                @foreach($days as $day)
+
+                                    @php
+                                        $tanggal = $day->format('Y-m-d');
+
+                                        $hariLibur = $schedule
+                                            ->where('tanggal', $tanggal)
+                                            ->where('status', 'libur')
+                                            ->count() > 0;
+                                    @endphp
+
                                     <th>
 
                                         {{ $day->translatedFormat('D') }}
@@ -96,7 +84,45 @@
                                             {{ $day->format('d/m') }}
                                         </small>
 
+                                        <br>
+
+                                        @if($hariLibur)
+
+                                            <form action="{{ route('schedule.buka') }}" method="POST" class="mt-2">
+
+                                                @csrf
+
+                                                <input type="hidden" name="tanggal" value="{{ $tanggal }}">
+
+                                                <button type="submit" class="btn btn-sm btn-success">
+
+                                                    Buka Kembali
+
+                                                </button>
+
+                                            </form>
+
+                                        @else
+
+                                            <form action="{{ route('schedule.libur') }}" method="POST" class="mt-2">
+
+                                                @csrf
+
+                                                <input type="hidden" name="tanggal" value="{{ $tanggal }}">
+
+                                                <button type="submit" class="btn btn-sm btn-warning"
+                                                    onclick="return confirm('Liburkan tanggal ini?')">
+
+                                                    Liburkan
+
+                                                </button>
+
+                                            </form>
+
+                                        @endif
+
                                     </th>
+
                                 @endforeach
 
                             </tr>
@@ -106,53 +132,61 @@
 
                         <tbody>
 
-                            @foreach ($jamSlots as $jam)
+                            @foreach($jamSlots as $jam)
+
                                 <tr>
 
-                                    {{-- Jam --}}
-                                    <td class="time-cell">
+                                    <td class="font-weight-bold">
                                         {{ $jam }}
                                     </td>
 
 
-                                    @foreach ($days as $day)
+                                    @foreach($days as $day)
+
                                         @php
 
                                             $tanggal = $day->format('Y-m-d');
 
                                             $data = $schedule->first(function ($item) use ($tanggal, $jam) {
-                                                return $item->tanggal->format('Y-m-d') == $tanggal &&
-                                                    \Carbon\Carbon::parse($item->jam_mulai)->format('H:i') == $jam;
+
+                                                return $item->tanggal->format('Y-m-d') == $tanggal
+                                                    && Carbon\Carbon::parse($item->jam_mulai)->format('H:i') == $jam;
+
                                             });
 
                                         @endphp
 
 
-                                        {{-- Belum dibuat --}}
-                                        @if (!$data)
+                                        @if(!$data)
+
                                             <td class="schedule-cell">
-                                                <span class="text-muted">
-                                                    -
-                                                </span>
+                                                -
                                             </td>
 
 
-                                            {{-- Tersedia --}}
-                                        @elseif ($data->status == 'tersedia')
+                                        @elseif($data->status == 'libur')
+
+                                            <td class="schedule-cell libur">
+                                                Libur
+                                            </td>
+
+
+                                        @elseif($data->status == 'tersedia')
+
                                             <td class="schedule-cell tersedia">
                                                 Tersedia
                                             </td>
 
 
-                                            {{-- Booked --}}
-                                        @elseif ($data->status == 'booked')
+                                        @elseif($data->status == 'booked')
+
                                             @php
                                                 $booking = $data->bookings->first();
                                             @endphp
 
                                             <td class="schedule-cell booked">
 
-                                                @if ($booking)
+                                                @if($booking)
                                                     {{ $booking->nama_tim }}
                                                 @else
                                                     Booked
@@ -161,23 +195,18 @@
                                             </td>
 
 
-                                            {{-- Maintenance --}}
-                                        @elseif ($data->status == 'maintenance')
+                                        @elseif($data->status == 'maintenance')
+
                                             <td class="schedule-cell maintenance">
                                                 Maintenance
                                             </td>
 
-
-                                            {{-- Libur --}}
-                                        @elseif ($data->status == 'libur')
-                                            <td class="schedule-cell libur">
-                                                Libur
-                                            </td>
-                                        @elseif ($data->status == 'maintenance')
                                         @endif
+
                                     @endforeach
 
                                 </tr>
+
                             @endforeach
 
                         </tbody>
@@ -194,15 +223,6 @@
 
 
     <style>
-        .time-column {
-            width: 70px;
-        }
-
-        .time-cell {
-            font-weight: bold;
-            vertical-align: middle !important;
-        }
-
         .schedule-cell {
             height: 45px;
             min-width: 110px;
@@ -211,27 +231,28 @@
         }
 
         .tersedia {
-            background-color: #f0fff7;
+            background: #f0fff7;
             color: #10b981;
             font-weight: bold;
         }
 
         .booked {
-            background-color: #e4f7ed;
+            background: #e4f7ed;
             color: #10b981;
             font-weight: bold;
         }
 
         .maintenance {
-            background-color: #fff0d9;
+            background: #fff0d9;
             color: #d9822b;
             font-weight: bold;
         }
 
         .libur {
-            background-color: #eeeeee;
-            color: #777777;
+            background: #eeeeee;
+            color: #777;
             font-weight: bold;
         }
     </style>
+
 @endsection

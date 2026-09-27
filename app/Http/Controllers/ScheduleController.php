@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Schedule;
+use App\Models\Booking;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -11,7 +12,6 @@ class ScheduleController extends Controller
     public function index()
     {
         $mulaiMinggu = Carbon::now()->startOfWeek();
-        $akhirMinggu = Carbon::now()->endOfWeek();
 
         $days = [];
 
@@ -19,57 +19,16 @@ class ScheduleController extends Controller
             $days[] = $mulaiMinggu->copy()->addDays($i);
         }
 
-        // Jam 07:00 sampai 22:00
         $jamSlots = [];
 
         for ($i = 7; $i < 23; $i++) {
             $jamSlots[] = sprintf('%02d:00', $i);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Booking yang waktunya sudah selesai
-        |--------------------------------------------------------------------------
-        */
-
-        $bookingSelesai = \App\Models\Booking::with('jadwal')
-            ->where('status', 'dikonfirmasi')
-            ->get();
-
-        foreach ($bookingSelesai as $booking) {
-
-            if (!$booking->jadwal) {
-                continue;
-            }
-
-            $waktuSelesai = Carbon::parse(
-                $booking->jadwal->tanggal->format('Y-m-d')
-                . ' '
-                . $booking->jadwal->jam_selesai
-            );
-
-            if ($waktuSelesai->lessThanOrEqualTo(Carbon::now())) {
-
-                $booking->update([
-                    'status' => 'selesai'
-                ]);
-
-                $booking->jadwal->update([
-                    'status' => 'tersedia'
-                ]);
-            }
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Ambil jadwal minggu ini
-        |--------------------------------------------------------------------------
-        */
-
         $schedule = Schedule::with('bookings')
             ->whereBetween('tanggal', [
-                $mulaiMinggu->toDateString(),
-                $akhirMinggu->toDateString()
+                $mulaiMinggu->format('Y-m-d'),
+                $mulaiMinggu->copy()->addDays(6)->format('Y-m-d')
             ])
             ->orderBy('tanggal')
             ->orderBy('jam_mulai')
@@ -81,13 +40,6 @@ class ScheduleController extends Controller
             'schedule'
         ));
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Generate jadwal minggu ini
-    |--------------------------------------------------------------------------
-    */
 
     public function generate()
     {
@@ -113,17 +65,8 @@ class ScheduleController extends Controller
             }
         }
 
-        return redirect()
-            ->route('schedule.index')
-            ->with('success', 'Jadwal minggu ini berhasil dibuat.');
+        return back()->with('success', 'Jadwal minggu ini berhasil dibuat.');
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Liburkan satu hari
-    |--------------------------------------------------------------------------
-    */
 
     public function libur(Request $request)
     {
@@ -131,16 +74,17 @@ class ScheduleController extends Controller
             'tanggal' => 'required|date',
         ]);
 
-        $adaBooking = \App\Models\Booking::whereHas('jadwal', function ($query) use ($request) {
+        $adaBooking = Booking::whereHas('jadwal', function ($query) use ($request) {
             $query->where('tanggal', $request->tanggal);
         })
             ->whereIn('status', ['menunggu', 'dikonfirmasi'])
             ->exists();
 
         if ($adaBooking) {
-            return redirect()
-                ->route('schedule.index')
-                ->with('error', 'Tanggal tersebut masih memiliki booking.');
+            return back()->with(
+                'error',
+                'Tanggal tersebut masih memiliki booking.'
+            );
         }
 
         Schedule::where('tanggal', $request->tanggal)
@@ -148,17 +92,11 @@ class ScheduleController extends Controller
                 'status' => 'libur'
             ]);
 
-        return redirect()
-            ->route('schedule.index')
-            ->with('success', 'Tanggal berhasil diliburkan.');
+        return back()->with(
+            'success',
+            'Tanggal berhasil diliburkan.'
+        );
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Buka kembali hari yang libur
-    |--------------------------------------------------------------------------
-    */
 
     public function buka(Request $request)
     {
@@ -172,8 +110,40 @@ class ScheduleController extends Controller
                 'status' => 'tersedia'
             ]);
 
+        return back()->with(
+            'success',
+            'Tanggal berhasil dibuka kembali.'
+        );
+    }
+
+    public function edit(Schedule $schedule)
+    {
+        return view('admin.schedule.edit', compact('schedule'));
+    }
+
+    public function update(Request $request, Schedule $schedule)
+    {
+        $data = $request->validate([
+            'tanggal' => 'required|date',
+            'jam_mulai' => 'required',
+            'jam_selesai' => 'required',
+            'harga_per_jam' => 'required|numeric|min:0',
+            'status' => 'required|in:tersedia,maintenance',
+        ]);
+
+        $schedule->update($data);
+
         return redirect()
             ->route('schedule.index')
-            ->with('success', 'Tanggal berhasil dibuka kembali.');
+            ->with('success', 'Jadwal berhasil diperbarui.');
+    }
+
+    public function destroy(Schedule $schedule)
+    {
+        $schedule->delete();
+
+        return redirect()
+            ->route('schedule.index')
+            ->with('success', 'Jadwal berhasil dihapus.');
     }
 }
